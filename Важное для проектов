@@ -1,0 +1,62 @@
+1. Изучение данных
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import warnings
+import pylab
+data = pd.read_csv('/datasets/real_estate_data.csv')
+data
+
+data.info()
+data.describe()
+
+
+2  Подготовка данных
+# Найдем пропуски
+data.isna().sum()
+
+# Замена пропущенных значений на медианные
+print('Пропуски до:', data['kitchen_area'].isna().sum())
+data['kitchen_area'] = data['kitchen_area'].fillna(data['kitchen_area'].median())
+print('Пропуски после:', data['kitchen_area'].isna().sum())
+
+# Выбор нужных значений
+data = data.loc[(2.3 < data['ceiling_height'])&(data['ceiling_height']<6)]
+
+# Замена пропусков
+print('Пропуски до:', data['balcony'].isna().sum())
+data['balcony'] = data['balcony'].fillna(value=0)
+print('Пропуски после:', data['balcony'].isna().sum())
+
+# Поиск уникальных значений
+print(data['locality_name'].unique())
+
+# Унификация
+data['locality_name'] = data['locality_name'].str.replace('поселок', 'посёлок')
+
+# Замена пропусков на медианное значение в зависимости от количества комнат
+for values in data['rooms'].unique():
+    median_area = data.loc[data['rooms']==values,'living_area'].median()
+    print('жилая площадь(медиана)', values, median_area)
+    data.loc[(data['living_area'].isna())&(data['rooms']==values),'living_area'] = median_area   
+print('Пропуски после замены:', data['living_area'].isna().sum())
+
+# Замена типа данных
+data['last_price'] = data['last_price'].astype('float').astype('int')
+
+# Проверка наличия дубликатов
+data.duplicated().sum()
+print('Количество дубликатов:', data.duplicated().sum())
+
+#Добавлю в таблицу столбец price_meter (цена квадратного метра)
+data['price_meter'] = data['last_price']//data['total_area']
+data['price_meter'] =data['price_meter']
+print(data['price_meter'].head())
+
+#Построю гистограммы
+data['total_area'].plot(title = 'Общая площадь', kind='hist', range = (0, 400), bins=100)
+plt.xlabel('Общая площадь, м2')
+plt.ylabel('Количество квартир, шт.')
+
+#data['total_area'].hist(range = (0, 400), bins=100)
+
